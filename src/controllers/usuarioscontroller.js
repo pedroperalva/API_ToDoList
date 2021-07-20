@@ -1,25 +1,74 @@
+const UserDAO = require('../DAO/UsuariosDAO')
 
-const getUsuarios = (app, bd) =>{
-    app.get('/usuarios', (req, res) => {
-        res.send(bd.users)
+module.exports = (app, bd, Usuario) => {
+
+    let userBanco = new UserDAO(bd)
+
+    app.get('/usuarios', function (req, res) {
+        userBanco.getAllUsers()
+        .then((linhas)=>{
+            res.json({
+                result:linhas,
+                count:linhas.length
+            })
+        })
+        .catch((err)=>{
+            res.json({err, message:'Erro ao acessar o banco de dados'})
+        })      
     }) 
-}
-const postUsuarios = app =>{   
+
+
     app.post('/usuarios', (req, res) => {
-        res.send('Rota POST de usuarios ativada: usuarios adicionado ao banco de dados')
-    })   
-}
-
-const newUser = (app, bd, Usuario) => {
-    app.post('/usuarios/new', (req, res) => {
-        const createUser = new Usuario(req.body.nome, req.body.email, req.body.senha)
-        bd.users.push(createUser)
-        res.send('Usuario Criado')
+        const {nome, email, senha} = req.body
+        const createUser = new Usuario(nome, email, senha)
+        userBanco.insertUsers(createUser)
+        .then(()=>{
+            res.json({message:'Usuario criado com sucesso'})
+        })
+        .catch((err)=>{
+            res.json({err, message:'Erro ao criar Usuario'})
+        })
     })
-}
 
-module.exports = {
-    getUsuarios:getUsuarios,
-    postUsuarios:postUsuarios,
-    newUser:newUser
+
+    app.get('/usuarios/:email', (req, res) => {
+        const email = req.params.email
+        userBanco.getUsersFromMail(email)
+        .then((linhas)=>{
+            res.json({
+                result:linhas,
+                count:linhas.length
+            })
+        })
+        .catch((err)=>{
+            res.json({err, message:'Usuario não encontrado'})
+        })
+    }) 
+
+
+
+    app.delete('/usuarios/:email', (req, res) => {
+        const email = req.params.email
+        userBanco.deleteUsersFromMail(email)
+        .then(()=>{
+            res.json({message:'Usuario deletado com sucesso'})
+        })
+        .catch((err)=>{
+            res.json({err, message:'Erro ao tentar deletar Usuario'})
+        })
+    })
+
+    app.put('/usuarios/:email', (req, res)=>{
+
+        const emailParam = req.params.email
+        const body = req.body
+        userBanco.updateUsersFromMail(emailParam, body)
+        .then(()=>{
+            res.json({message:'Usuario modificado com sucesso'})
+        })
+        .catch((err)=>{
+            res.json({err, message:'Erro ao tentar modificar Usuario'})
+        })  
+    })
+
 }

@@ -1,28 +1,21 @@
 const express = require('express')
-
 const app = express()
 const port = 3031
 
-//import controllers
-const {getUsuarios,postUsuarios,newUser} = require('./controllers/usuarioscontroller')
-const {getTarefas,postTarefas,newTask} = require('./controllers/tarefascontroller')
-//import models
+//import bd e Model Usuario e Tarefa
+const bd = require('./infra/sqlite-db')
 const Usuario = require('./models/usuariosmodel')
 const Tarefa = require('./models/tarefasmodel')
-const bd = require('./infra/bd')
+//import controllers
+const controllerUsuarios = require('../src/controllers/usuarioscontroller')
+const controllerTarefas = require('../src/controllers/tarefascontroller')
 
-
+//middleware
 app.use(express.json())
 
-getUsuarios(app, bd)
-postUsuarios(app)
-getTarefas(app, bd)
-postTarefas(app)
-newUser(app, bd, Usuario)
-newTask(app, bd, Tarefa)
-
-console.log(new Usuario('Pedro', 'pedro@gmail.com', '1234'))
-console.log(new Tarefa('Estudar', 'pomodoro', 'ativo', '12/12/2020'))
+//passando parâmetros para os controllers
+controllerUsuarios(app, bd, Usuario)
+controllerTarefas(app, bd, Tarefa)
 
 
 app.listen(port, () => {

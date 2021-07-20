@@ -1,26 +1,35 @@
+const TaskDAO = require('../DAO/TarefasDAO')
 
-const getTarefas = (app, bd) =>{
-    app.get('/tarefas', (req, res) => {
-        res.send(bd.tasks)
-    })
-}
+module.exports = (app, bd, Tarefa) => {
 
-const postTarefas = app =>{   
-    app.post('/tarefas', (req, res) => {
-        res.send('Rota POST de tarefas ativada: tarefas adicionado ao banco de dados')
-    })   
-}
+    let TaskBanco = new TaskDAO(bd)
 
-const newTask = (app, bd, Tarefa) => {
-    app.post('/tarefas/new', (req, res) => {
-        const createTask = new Tarefa(req.body.titulo, req.body.descricao, req.body.status, req.body.datadecriacao)
-        bd.tasks.push(createTask)
-        res.send('Tarefa Criada')
-    })
-}
+    app.get('/tarefas', function (req, res) {
+        TaskBanco.getAllTasks()
+        .then((linhas)=>{
+            res.json({
+                result:linhas,
+                count:linhas.length
+            })
+        })
+        .catch((err)=>{
+            res.json({err, message:'Erro ao acessar o banco de dados'})
+        })      
+    }) 
 
-module.exports = {
-    getTarefas:getTarefas,
-    postTarefas:postTarefas,
-    newTask:newTask
+    app.get('/tarefas/:status', (req, res) => {
+        const status = req.params.status
+        TaskBanco.getTasksFromStatus(status)
+        .then((linhas)=>{
+            res.json({
+                result:linhas,
+                count:linhas.length
+            })
+        })
+        .catch((err)=>{
+            res.json({err, message:'Tarefas não encontradas'})
+        })
+    }) 
+
+
 }
